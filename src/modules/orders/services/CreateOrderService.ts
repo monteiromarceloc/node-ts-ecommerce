@@ -46,12 +46,16 @@ class CreateOrderService {
     if (foundProducts.length < products.length) {
       throw new AppError('Algum produto não foi encontrado.');
     }
-    // TODO: check quantitys
 
-    // TODO: create order_products properly
-    const order_products = foundProducts.map(p => ({
+    foundProducts.forEach((p, i) => {
+      if (p.quantity < products[i].quantity) {
+        throw new AppError('Produto com quantidade insuficiente.');
+      }
+    });
+
+    const order_products = products.map((p, i) => ({
       product_id: p.id,
-      price: p.price,
+      price: foundProducts[i].price,
       quantity: p.quantity,
     }));
 
@@ -59,6 +63,8 @@ class CreateOrderService {
       customer: checkCustomerExists,
       products: order_products,
     });
+
+    order.customer = checkCustomerExists;
 
     await this.productsRepository.updateQuantity(
       products.map(p1 => {
